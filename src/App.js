@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useState, useEffect } from "react";
 
 export default function App() {
@@ -6,16 +7,12 @@ export default function App() {
   const [groupInput, setGroupInput] = useState("");
   const [rooms, setRooms] = useState([]);
 
-  // ✅ NEU
-  const [loaded, setLoaded] = useState(false);
-
-  // ✅ Laden beim Start
+  // ✅ NEU: Laden beim Start
   useEffect(() => {
     const saved = localStorage.getItem("hotel_rooms");
     if (saved) {
       setRooms(JSON.parse(saved));
     }
-    setLoaded(true);
   }, []);
 
   // 📅 Datum format
@@ -36,6 +33,7 @@ export default function App() {
 
     function parseDate(str) {
       if (!str) return null;
+
       const parts = str.split(".");
       if (parts.length !== 3) return null;
 
@@ -119,17 +117,25 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // 🍽️ Frühstück Toggle
+  // 🍽️ Frühstück
   function markBreakfast(id) {
     setRooms(prev =>
       prev.map(r => {
         if (r.id !== id) return r;
 
         if (r.breakfast) {
-          return { ...r, breakfast: false, start: null };
+          return {
+            ...r,
+            breakfast: false,
+            start: null
+          };
         }
 
-        return { ...r, breakfast: true, start: Date.now() };
+        return {
+          ...r,
+          breakfast: true,
+          start: Date.now()
+        };
       })
     );
   }
@@ -213,9 +219,11 @@ export default function App() {
     if (tab === "breakfast") {
       return room.breakfast ? "#87CEFA" : "#f0f0f0";
     }
+
     if (room.cleaning === "dirty") return "#FFA500";
     if (room.cleaning === "clean") return "#90EE90";
     if (room.breakfast) return "#87CEFA";
+
     return "#f0f0f0";
   }
 
@@ -225,9 +233,11 @@ export default function App() {
     return Math.floor((Date.now() - start) / 60000);
   }
 
+  // 🔢 Frühstück Logik
   const openRooms = rooms.filter(r => !r.breakfast);
 
   const groups = {};
+
   rooms.forEach(r => {
     const key = r.group || "single_" + r.number;
 
@@ -258,16 +268,19 @@ export default function App() {
   );
 
   const tableSummary = {};
+
   groupList.forEach(g => {
     if (g.arrivedRooms === 0) {
-      tableSummary[g.persons] = (tableSummary[g.persons] || 0) + 1;
+      const size = g.persons;
+      tableSummary[size] = (tableSummary[size] || 0) + 1;
     }
   });
 
   openRooms
     .filter(r => !r.group)
     .forEach(r => {
-      tableSummary[r.persons] = (tableSummary[r.persons] || 0) + 1;
+      const size = r.persons;
+      tableSummary[size] = (tableSummary[size] || 0) + 1;
     });
 
   const tableText = Object.keys(tableSummary).length
@@ -277,11 +290,10 @@ export default function App() {
         .join(" | ")
     : "Keine offenen Gäste";
 
-  // ✅ Speichern (fix)
+  // ✅ NEU: Automatisch speichern
   useEffect(() => {
-    if (!loaded) return;
     localStorage.setItem("hotel_rooms", JSON.stringify(rooms));
-  }, [rooms, loaded]);
+  }, [rooms]);
 
   return (
     <div style={{ padding: 20 }}>
@@ -295,11 +307,20 @@ export default function App() {
 
       {tab === "reception" && (
         <div style={{ marginBottom: 20 }}>
-          <textarea rows={4} value={importText} onChange={e => setImportText(e.target.value)} style={{ width: "100%" }} />
+          <textarea
+            rows={4}
+            value={importText}
+            onChange={e => setImportText(e.target.value)}
+            style={{ width: "100%" }}
+          />
           <button onClick={importData}>📥 Import</button>
 
           <div style={{ marginTop: 10 }}>
-            <input placeholder="21,24" value={groupInput} onChange={e => setGroupInput(e.target.value)} />
+            <input
+              placeholder="21,24"
+              value={groupInput}
+              onChange={e => setGroupInput(e.target.value)}
+            />
             <button onClick={createGroup}>👥 Gruppe</button>
           </div>
         </div>
@@ -315,27 +336,76 @@ export default function App() {
 
           <h3>Gruppen:</h3>
 
+          {groupList.length === 0 && openRooms.length === 0 && (
+            <p>Alle Gäste da</p>
+          )}
+
+          {groupList.length === 0 && openRooms.length > 0 && (
+            <p>Keine Gruppen</p>
+          )}
+
           {groupList.map((g, i) => (
             <div key={i}>
-              <strong>Gruppe {g.totalRooms} Zi. ({g.arrivedRooms}/{g.totalRooms})</strong> → {g.rooms.join(" + ")}
+              <strong>
+                Gruppe {g.totalRooms} Zi. ({g.arrivedRooms}/{g.totalRooms})
+              </strong>{" "}
+              → {g.rooms.join(" + ")}
             </div>
           ))}
         </>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,150px)", gap: 10 }}>
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fill,150px)",
+        gap: 10
+      }}>
         {[...rooms]
           .sort((a, b) => Number(a.number) - Number(b.number))
           .map(r => (
-            <div key={r.id}
+            <div
+              key={r.id}
               onClick={() => tab === "breakfast" && markBreakfast(r.id)}
-              style={{ background: getColor(r), padding: 10, cursor: tab === "breakfast" ? "pointer" : "default" }}
+              style={{
+                background: getColor(r),
+                padding: 10,
+                cursor: tab === "breakfast" ? "pointer" : "default"
+              }}
             >
               <b>Zimmer {r.number}</b>
-              <p>{r.type === "departure" ? "🚪 Abreise" : "🛏️ Bleibe"}</p>
+
+              <p>
+                {r.type === "departure" ? "🚪 Abreise" : "🛏️ Bleibe"}
+              </p>
+
               <p>{r.persons} Pers.</p>
               <p>{r.guestName}</p>
               <p>{formatDateRange(r.arrival, r.departure)}</p>
+
+              {tab === "reception" && r.type === "departure" && (
+                <>
+                  {r.cleaning === "idle" && (
+                    <button onClick={() => markCheckout(r.id)}>Checkout</button>
+                  )}
+
+                  {r.cleaning !== "idle" && !r.checked && (
+                    <button onClick={() => markChecked(r.id)}>Kontrolliert</button>
+                  )}
+
+                  <button onClick={() => resetRoom(r.id)}>❌</button>
+                </>
+              )}
+
+              {tab === "housekeeping" && (
+                <>
+                  {r.breakfast && r.start && (
+                    <p>⏱️ {getMinutes(r.start)} min</p>
+                  )}
+
+                  <button onClick={() => markClean(r.id)}>Clean</button>
+                  <button onClick={() => resetRoom(r.id)}>❌</button>
+                </>
+              )}
             </div>
           ))}
       </div>
