@@ -486,8 +486,6 @@ function createGroup() {
 }
 
 /* eslint-disable no-unused-vars */
-import * as XLSX from "xlsx";
-import { useState, useEffect } from "react";
 
 export default function App() {
   const [tab, setTab] = useState("breakfast");
