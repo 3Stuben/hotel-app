@@ -485,17 +485,6 @@ function createGroup() {
   );
 }
 
-/* eslint-disable no-unused-vars */
-
-export default function App() {
-  const [tab, setTab] = useState("breakfast");
-  const [importText, setImportText] = useState("");
-  const [groupInput, setGroupInput] = useState("");
-  const [rooms, setRooms] = useState([]);
-
-  const [selectedRooms, setSelectedRooms] = useState([]);
-const [groupMode, setGroupMode] = useState(false);
-
   // ✅ NEU: Laden beim Start
   useEffect(() => {
     const saved = localStorage.getItem("hotel_rooms");
