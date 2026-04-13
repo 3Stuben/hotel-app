@@ -971,4 +971,3 @@ function createGroup() {
     </div>
   );
 }
->>>>>>> afb72e34adcc885e13c2a3da00aae2e5e8a117dc
