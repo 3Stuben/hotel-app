@@ -385,9 +385,7 @@ function createGroup() {
       </div>
 
       {tab === "reception" && (
-        <div style={{ marginBottom: 20 }}>
-          <textarea rows={4} value={importText} onChange={e => setImportText(e.target.value)} style={{ width: "100%" }} />
-          <button onClick={importData}>📥 Import</button>
+        <div style={{ marginBottom: 20 }}>          
         <input type="file" accept=".xlsx,.xls" onChange={handleExcelUpload} />
 
         <div style={{ marginTop: 10 }}>
