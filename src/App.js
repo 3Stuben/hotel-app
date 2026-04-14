@@ -224,15 +224,15 @@ function createGroup() {
     );
   }
 
-  function markCheckout(id) {
-    setRooms(prev =>
-      prev.map(r =>
-        r.id === id
-          ? { ...r, cleaning: "dirty", checkout: true }
-          : r
-      )
-    );
-  }
+    function markCheckout(id) {
+  setRooms(prev =>
+    prev.map(r =>
+      r.id === id
+        ? { ...r, cleaning: "dirty", checkout: true, type: "departure" }
+        : r
+    )
+  );
+}
 
   function markClean(id) {
     setRooms(prev =>
