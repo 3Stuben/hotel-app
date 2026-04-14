@@ -21,13 +21,18 @@ const [groupMode, setGroupMode] = useState(false);
 
   // 📅 Datum format
   function formatDateRange(start, end) {
-    if (!start || !end) return "";
-    const format = (d) => {
-      const [y, m, day] = d.split(".");
-      return `${day}.${m}.${y.slice(2)}`;
-    };
-    return `${format(start)}–${format(end)}`;
-  }
+  if (!start || !end) return "";
+
+  const format = (d) => {
+    const parts = d.split(".");
+    if (parts.length !== 3) return d;
+
+    const [day, month, year] = parts;
+    return `${day}.${month}.${year.slice(2)}`;
+  };
+
+  return `${format(start)}–${format(end)}`;
+}
 
   // 🔥 IMPORT
   function importData() {
@@ -224,7 +229,7 @@ function createGroup() {
     );
   }
 
-    function markCheckout(id) {
+ function markCheckout(id) {
   setRooms(prev =>
     prev.map(r =>
       r.id === id
@@ -439,17 +444,18 @@ function createGroup() {
     }
   }}
   style={{
-    background: r.breakfast
-  ? `linear-gradient(
-      135deg,
-      ${getColor(r)} 0%,
-      ${getColor(r)} 45%,
-      red 47%,
-      red 53%,
-      ${getColor(r)} 55%,
-      ${getColor(r)} 100%
-    )`
-  : getColor(r),
+    background:
+  tab === "breakfast" && r.breakfast
+    ? `linear-gradient(
+        135deg,
+        ${getColor(r)} 0%,
+        ${getColor(r)} 45%,
+        red 47%,
+        red 53%,
+        ${getColor(r)} 55%,
+        ${getColor(r)} 100%
+      )`
+    : getColor(r),
     padding: 10,
     cursor: tab === "breakfast" || groupMode ? "pointer" : "default",
     border: selectedRooms.includes(r.number)
