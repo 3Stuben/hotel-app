@@ -305,12 +305,11 @@ function createGroup() {
   ];
 
   function getColor(room) {
-    if (tab === "breakfast" && room.group && !room.breakfast) {
-      const numbers = room.group.split("_").slice(1);
-      const firstRoom = Number(numbers[0]) || 0;
-      const index = firstRoom % groupColors.length;
-      return groupColors[index];
-    }
+   if (tab === "breakfast" && room.group && !room.breakfast) {
+  const groupIndex = Object.keys(groups).indexOf(room.group);
+  const index = groupIndex % groupColors.length;
+  return groupColors[index];
+}
 
     if (tab === "breakfast") {
       return room.breakfast ? "#87CEFA" : "#f0f0f0";
@@ -385,7 +384,7 @@ function createGroup() {
       </div>
 
       {tab === "reception" && (
-        <div style={{ marginBottom: 20 }}>          
+        <div>          
         <input type="file" accept=".xlsx,.xls" onChange={handleExcelUpload} />
 
         <div style={{ marginTop: 10 }}>
