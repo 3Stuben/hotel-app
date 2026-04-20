@@ -9,168 +9,173 @@ export default function App() {
   const [rooms, setRooms] = useState([]);
 
   const [selectedRooms, setSelectedRooms] = useState([]);
-const [groupMode, setGroupMode] = useState(false);
+  const [groupMode, setGroupMode] = useState(false);
 
-  // ✅ NEU: Laden beim Start
+  // ✅ NEU: NAS URL
+  const API_URL = "http://192.168.2.121/Hotel_APP/save.php";
+
+  // ✅ NEU: Laden vom NAS
   useEffect(() => {
-    const saved = localStorage.getItem("hotel_rooms");
-    if (saved) {
-      setRooms(JSON.parse(saved));
-    }
+    fetch(API_URL)
+      .then(res => res.json())
+      .then(data => {
+        if (data) setRooms(data);
+      })
+      .catch(() => {
+        console.log("Keine rooms.json gefunden");
+      });
   }, []);
 
   // 📅 Datum format
   function formatDateRange(start, end) {
-  if (!start || !end) return "";
+    if (!start || !end) return "";
 
-  const format = (d) => {
-    const parts = d.split(".");
-    if (parts.length !== 3) return d;
+    const format = (d) => {
+      const parts = d.split(".");
+      if (parts.length !== 3) return d;
 
-    const [day, month, year] = parts;
-    return `${day}.${month}.${year.slice(2)}`;
-  };
+      const [day, month, year] = parts;
+      return `${day}.${month}.${year.slice(2)}`;
+    };
 
-  return `${format(start)}–${format(end)}`;
-}
+    return `${format(start)}–${format(end)}`;
+  }
 
   // 🔥 IMPORT
   function importData() {
-  const lines = importText.split("\n").filter(l => l.trim() !== "");
+    const lines = importText.split("\n").filter(l => l.trim() !== "");
 
-  const newRooms = lines.map((line, index) => {
-    const parts = line.split(";");
+    const newRooms = lines.map((line, index) => {
+      const parts = line.split(";");
 
-    const name = parts[0]?.trim();
-    const number = parts[1]?.trim();
-    const persons = parts[2];
-    const arrival = parts[3];
-    const departure = parts[4];
+      const name = parts[0]?.trim();
+      const number = parts[1]?.trim();
+      const persons = parts[2];
+      const arrival = parts[3];
+      const departure = parts[4];
 
-    return {
-      id: Date.now() + index,
-      number,
-      persons: Number(persons) || 1,
-      guestName: name,
-      breakfast: false,
-      cleaning: "idle",
-      checked: false,
-      checkout: false,
-      type: "stay",
-      group: null,
-      arrival,
-      departure,
-      start: null,
-      prevCleaning: null,
-      prevBreakfast: null
-    };
-  });
-
-  setRooms(newRooms);
-}
-  async function handleExcelUpload(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  const data = await file.arrayBuffer();
-  const workbook = XLSX.read(data);
-
-  const sheet = workbook.Sheets[workbook.SheetNames[0]];
-  const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-
-  const today = new Date();
-  const newRooms = [];
-
-  rows.forEach((row, index) => {
-    const number = row[0]; // Spalte A
-    const text = row[1];   // Spalte B
-
-    if (!number || !text) return;
-
-    const str = String(text);
-
-    // 📅 Datum rausziehen
-    const dateMatch = str.match(/(\d{2}\.\d{2}\.\d{4})\s*-\s*(\d{2}\.\d{2}\.\d{4})/);
-    if (!dateMatch) return;
-
-    const arrival = dateMatch[1];
-    const departure = dateMatch[2];
-
-    // 👤 Personen
-    const personsMatch = str.match(/(\d+)\s*Erw/);
-    const persons = personsMatch ? Number(personsMatch[1]) : 1;
-
-    // 👤 Name (bereinigt)
-    let guestName = str
-      .replace(dateMatch[0], "")
-      .replace(/-\s*\d+\s*Erw\.?/, "")
-      .replace("Frau ", "")
-      .replace("Herr ", "")
-      .trim();
-
-    // 🚪 Abreise prüfen
-    const [d, m, y] = departure.split(".");
-    const depDate = new Date(y, m - 1, d);
-
-    const isDeparture =
-      depDate.toDateString() === today.toDateString();
-
-    newRooms.push({
-      id: Date.now() + index,
-      number: String(number),
-      persons,
-      guestName,
-      breakfast: false,
-      cleaning: "idle",
-      checked: false,
-      checkout: false,
-      type: isDeparture ? "departure" : "stay",
-      group: null,
-      arrival,
-      departure,
-      start: null,
-      prevCleaning: null,
-      prevBreakfast: null
+      return {
+        id: Date.now() + index,
+        number,
+        persons: Number(persons) || 1,
+        guestName: name,
+        breakfast: false,
+        cleaning: "idle",
+        checked: false,
+        checkout: false,
+        type: "stay",
+        group: null,
+        arrival,
+        departure,
+        start: null,
+        prevCleaning: null,
+        prevBreakfast: null
+      };
     });
-  });
 
-  setRooms(newRooms);
-}
+    setRooms(newRooms);
+  }
+
+  async function handleExcelUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const data = await file.arrayBuffer();
+    const workbook = XLSX.read(data);
+
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+    const today = new Date();
+    const newRooms = [];
+
+    rows.forEach((row, index) => {
+      const number = row[0];
+      const text = row[1];
+
+      if (!number || !text) return;
+
+      const str = String(text);
+
+      const dateMatch = str.match(/(\d{2}\.\d{2}\.\d{4})\s*-\s*(\d{2}\.\d{2}\.\d{4})/);
+      if (!dateMatch) return;
+
+      const arrival = dateMatch[1];
+      const departure = dateMatch[2];
+
+      const personsMatch = str.match(/(\d+)\s*Erw/);
+      const persons = personsMatch ? Number(personsMatch[1]) : 1;
+
+      let guestName = str
+        .replace(dateMatch[0], "")
+        .replace(/-\s*\d+\s*Erw\.?/, "")
+        .replace("Frau ", "")
+        .replace("Herr ", "")
+        .trim();
+
+      const [d, m, y] = departure.split(".");
+      const depDate = new Date(y, m - 1, d);
+
+      const isDeparture =
+        depDate.toDateString() === today.toDateString();
+
+      newRooms.push({
+        id: Date.now() + index,
+        number: String(number),
+        persons,
+        guestName,
+        breakfast: false,
+        cleaning: "idle",
+        checked: false,
+        checkout: false,
+        type: isDeparture ? "departure" : "stay",
+        group: null,
+        arrival,
+        departure,
+        start: null,
+        prevCleaning: null,
+        prevBreakfast: null
+      });
+    });
+
+    setRooms(newRooms);
+  }
 
   // 👥 Gruppen erstellen
-function createGroup() {
-  const roomNumbers = groupMode
-    ? selectedRooms
-    : groupInput.split(",").map(r => r.trim());
+  function createGroup() {
+    const roomNumbers = groupMode
+      ? selectedRooms
+      : groupInput.split(",").map(r => r.trim());
 
-  if (roomNumbers.length < 2) return;
+    if (roomNumbers.length < 2) return;
 
-  const sorted = [...roomNumbers].sort();
-  const groupName = "group_" + sorted.join("_");
+    const sorted = [...roomNumbers].sort();
+    const groupName = "group_" + sorted.join("_");
 
-  setRooms(prev =>
-    prev.map(r =>
-      roomNumbers.includes(r.number)
-        ? { ...r, group: groupName }
-        : r
-    )
-  );
+    setRooms(prev =>
+      prev.map(r =>
+        roomNumbers.includes(r.number)
+          ? { ...r, group: groupName }
+          : r
+      )
+    );
 
-  setSelectedRooms([]);
-  setGroupInput("");
-  setGroupMode(false);
-}
+    setSelectedRooms([]);
+    setGroupInput("");
+    setGroupMode(false);
+  }
+
   function toggleRoomSelection(roomNumber) {
-  if (!groupMode) return;
+    if (!groupMode) return;
 
-  setSelectedRooms(prev => {
-    if (prev.includes(roomNumber)) {
-      return prev.filter(r => r !== roomNumber);
-    } else {
-      return [...prev, roomNumber];
-    }
-  });
-}
+    setSelectedRooms(prev => {
+      if (prev.includes(roomNumber)) {
+        return prev.filter(r => r !== roomNumber);
+      } else {
+        return [...prev, roomNumber];
+      }
+    });
+  }
 
   // 🔄 Timer
   const [, setTick] = useState(0);
@@ -179,7 +184,7 @@ function createGroup() {
     return () => clearInterval(interval);
   }, []);
 
-  // 🍽️ Frühstück (NEU)
+  // 🍽️ Frühstück
   function markBreakfast(id) {
     const clickedRoom = rooms.find(r => r.id === id);
 
@@ -229,15 +234,15 @@ function createGroup() {
     );
   }
 
- function markCheckout(id) {
-  setRooms(prev =>
-    prev.map(r =>
-      r.id === id
-        ? { ...r, cleaning: "dirty", checkout: true, type: "departure" }
-        : r
-    )
-  );
-}
+  function markCheckout(id) {
+    setRooms(prev =>
+      prev.map(r =>
+        r.id === id
+          ? { ...r, cleaning: "dirty", checkout: true, type: "departure" }
+          : r
+      )
+    );
+  }
 
   function markClean(id) {
     setRooms(prev =>
@@ -305,11 +310,11 @@ function createGroup() {
   ];
 
   function getColor(room) {
-   if (tab === "breakfast" && room.group && !room.breakfast) {
-  const groupIndex = Object.keys(groups).indexOf(room.group);
-  const index = groupIndex % groupColors.length;
-  return groupColors[index];
-}
+    if (tab === "breakfast" && room.group && !room.breakfast) {
+      const groupIndex = Object.keys(groups).indexOf(room.group);
+      const index = groupIndex % groupColors.length;
+      return groupColors[index];
+    }
 
     if (tab === "breakfast") {
       return room.breakfast ? "#87CEFA" : "#f0f0f0";
@@ -351,7 +356,6 @@ function createGroup() {
 
   const groupList = Object.values(groups).filter(g => g.rooms.length > 1 && g.arrivedRooms < g.totalRooms);
 
-  // ✅ NEU: Anzeige Gruppen in Rezeption
   const createdGroups = Object.values(groups).filter(g => g.rooms.length > 1);
 
   const tableSummary = {};
@@ -369,9 +373,34 @@ function createGroup() {
     ? Object.entries(tableSummary).sort((a, b) => a[0] - b[0]).map(([s, c]) => `${c}x ${s}er`).join(" | ")
     : "Keine offenen Gäste";
 
+  // ✅ NEU: Speichern auf NAS
   useEffect(() => {
-    localStorage.setItem("hotel_rooms", JSON.stringify(rooms));
+    fetch(API_URL, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(rooms)
+    }).catch(() => {
+      console.log("Speichern fehlgeschlagen");
+    });
   }, [rooms]);
+
+  // 🔄 AUTO SYNC (alle 5 Sekunden)
+useEffect(() => {
+  const interval = setInterval(() => {
+    fetch("http://192.168.2.121/Hotel_APP/load.php?ts=" + Date.now())
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setRooms(data);
+        }
+      })
+      .catch(() => {});
+  }, 5000);
+
+  return () => clearInterval(interval);
+}, []);
 
   return (
     <div style={{ padding: 20 }}>
@@ -384,23 +413,22 @@ function createGroup() {
       </div>
 
       {tab === "reception" && (
-        <div>          
-        <input type="file" accept=".xlsx,.xls" onChange={handleExcelUpload} />
+        <div>
+          <input type="file" accept=".xlsx,.xls" onChange={handleExcelUpload} />
 
-        <div style={{ marginTop: 10 }}>
-  <input placeholder="21,24" value={groupInput} onChange={e => setGroupInput(e.target.value)} />
-  <button onClick={createGroup}>👥 Gruppe</button>
+          <div style={{ marginTop: 10 }}>
+            <input placeholder="21,24" value={groupInput} onChange={e => setGroupInput(e.target.value)} />
+            <button onClick={createGroup}>👥 Gruppe</button>
 
-  <button onClick={() => setGroupMode(!groupMode)} style={{ marginLeft: 10 }}>
-    {groupMode ? "❌ Auswahl beenden" : "👆 Zimmer auswählen"}
-  </button>
+            <button onClick={() => setGroupMode(!groupMode)} style={{ marginLeft: 10 }}>
+              {groupMode ? "❌ Auswahl beenden" : "👆 Zimmer auswählen"}
+            </button>
 
-  {groupMode && (
-    <p>Ausgewählt: {selectedRooms.join(", ") || "keine"}</p>
-  )}
-</div>
+            {groupMode && (
+              <p>Ausgewählt: {selectedRooms.join(", ") || "keine"}</p>
+            )}
+          </div>
 
-          {/* ✅ NEU: Gruppenübersicht */}
           <div style={{ marginTop: 20 }}>
             <h3>👥 Gruppenübersicht:</h3>
 
@@ -432,34 +460,34 @@ function createGroup() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,150px)", gap: 10 }}>
         {[...rooms].sort((a, b) => Number(a.number) - Number(b.number)).map(r => (
           <div
-  key={r.id}
-  onClick={() => {
-    if (groupMode && tab === "reception") {
-      toggleRoomSelection(r.number);
-    } else if (tab === "breakfast") {
-      markBreakfast(r.id);
-    }
-  }}
-  style={{
-    background:
-  tab === "breakfast" && r.breakfast
-    ? `linear-gradient(
-        135deg,
-        ${getColor(r)} 0%,
-        ${getColor(r)} 45%,
-        red 47%,
-        red 53%,
-        ${getColor(r)} 55%,
-        ${getColor(r)} 100%
-      )`
-    : getColor(r),
-    padding: 10,
-    cursor: tab === "breakfast" || groupMode ? "pointer" : "default",
-    border: selectedRooms.includes(r.number)
-      ? "3px solid red"
-      : "1px solid #ccc"
-  }}
->
+            key={r.id}
+            onClick={() => {
+              if (groupMode && tab === "reception") {
+                toggleRoomSelection(r.number);
+              } else if (tab === "breakfast") {
+                markBreakfast(r.id);
+              }
+            }}
+            style={{
+              background:
+                tab === "breakfast" && r.breakfast
+                  ? `linear-gradient(
+                      135deg,
+                      ${getColor(r)} 0%,
+                      ${getColor(r)} 45%,
+                      red 47%,
+                      red 53%,
+                      ${getColor(r)} 55%,
+                      ${getColor(r)} 100%
+                    )`
+                  : getColor(r),
+              padding: 10,
+              cursor: tab === "breakfast" || groupMode ? "pointer" : "default",
+              border: selectedRooms.includes(r.number)
+                ? "3px solid red"
+                : "1px solid #ccc"
+            }}
+          >
             <b>Zimmer {r.number}</b>
             <p>{r.type === "departure" ? "🚪 Abreise" : "🛏️ Bleibe"}</p>
             <p>{r.persons} Pers.</p>
@@ -487,4 +515,3 @@ function createGroup() {
     </div>
   );
 }
-
