@@ -376,7 +376,7 @@ export default function App() {
   // ✅ NEU: Speichern auf NAS
   useEffect(() => {
     fetch(API_URL, {
-      method: "PUT",
+      method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
